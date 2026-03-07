@@ -168,20 +168,6 @@ disqus_shortname: # put your disqus shortname
 # If you have blog posts published on medium.com or other external sources,
 # you can display them in your blog by adding a link to the RSS feed.
 external_sources:
-  - name: medium.com
-    posts:
-      - url: https://medium.com/@junjie-tang/scaling-llm-inference-on-eks-with-aws-inferentia-and-trainium-47d4e3db1941
-        published_date: 2024-10-17
-      - url: https://medium.com/@junjie-tang/secure-and-flexible-access-control-for-regulated-workloads-a-guide-to-implementing-role-based-fa7713c7c5fa
-        published_date: 2024-10-10
-      - url: https://medium.com/@junjie-tang/mastering-the-future-of-autonomous-driving-with-end-to-end-ai-f7ef995fcd5a
-        published_date: 2024-10-08
-      - url: https://medium.com/@junjie-tang/how-to-deploy-trained-model-to-robots-after-using-functions-generated-by-large-models-by-customers-a9cabd71f1f2
-        published_date: 2024-10-01
-      - url: https://medium.com/@junjie-tang/how-to-fine-tune-a-6b-llm-simply-and-cost-effective-using-ray-ai-runtime-on-amazon-eks-a4ae0b3c6464
-        published_date: 2024-09-29
-      - url: https://medium.com/@junjie-tang/how-to-build-a-successful-open-source-project-for-the-autonomous-driving-1296d2fdbf2f
-        published_date: 2024-09-10
 
 # -----------------------------------------------------------------------------
 # Newsletter
