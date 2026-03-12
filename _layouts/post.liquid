@@ -73,6 +73,14 @@ layout: default
     </div>
   </article>
 
+  {% unless page.no_likes %}
+  <!-- Applause / Like Button -->
+  <div style="text-align: center; margin: 2rem 0;">
+    <applause-button style="width: 58px; height: 58px;" color="#ff5722" multiclap="true" />
+    <p style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">Like this post? Click to applaud!</p>
+  </div>
+  {% endunless %}
+
   {% if page.citation %}
     {% include citation.liquid %}
   {% endif %}
