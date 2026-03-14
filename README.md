@@ -27,3 +27,4 @@ Then open [http://localhost:4000](http://localhost:4000).
 ## License
 
 The theme is available as open source under the [MIT License](LICENSE).
+
