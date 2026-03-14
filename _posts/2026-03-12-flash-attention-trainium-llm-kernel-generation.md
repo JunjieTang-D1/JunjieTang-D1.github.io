@@ -109,7 +109,7 @@ After 6 rounds of iterative optimization, the agent converged on a kernel matchi
     </div>
 </div>
 <div class="caption">
-    Agent optimization trajectory across 6 rounds at 4K (left) and 16K (right). The dashed blue line shows v7's target performance. The agent matches v7 at R5 (4K) and R6 (16K).
+    Agent optimization: starting performance vs final result at 4K (left) and 16K (right). The dashed blue line shows v7's target performance. The agent matches v7 after iterative optimization.
 </div>
 
 The agent also discovered algorithmic variants and memory optimization techniques not present in the reference kernels, demonstrating the potential for LLM-driven hardware optimization beyond simple parameter tuning. Details of the optimization methodology are the subject of ongoing work.
