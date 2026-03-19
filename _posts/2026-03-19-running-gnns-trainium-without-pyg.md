@@ -2,7 +2,7 @@
 layout: post
 title: "Running Graph Neural Networks on AWS Trainium Without PyTorch Geometric"
 date: 2026-03-19
-description: "PyTorch Geometric doesn't compile on XLA. We built neuron-pyg — a ~1,500-line drop-in replacement — and ran VectorWorld's full 45M-parameter VAE encoder on Trainium with pretrained weights. Numerically equivalent to PyG outputs."
+description: "PyTorch Geometric doesn't compile on XLA. We built neuron-pyg - a ~1,500-line drop-in replacement - and ran VectorWorld's full 45M-parameter VAE encoder on Trainium with pretrained weights. Numerically equivalent to PyG outputs."
 tags: [aws, ai, ml, trainium, gnn, xla]
 toc:
   beginning: true
@@ -10,11 +10,11 @@ toc:
 
 > **Disclaimer:** The views and opinions expressed in this post are my own and do not represent those of my employer.
 
-The GNN community has a hidden dependency problem. PyTorch Geometric — the library underneath virtually every graph neural network in production, with 23,000+ GitHub stars — hardcodes CUDA scatter kernels into its critical path. If your accelerator doesn't support CUDA, your GNN doesn't run.
+The GNN community has a hidden dependency problem. PyTorch Geometric - the library underneath virtually every graph neural network in production, with 23,000+ GitHub stars - hardcodes CUDA scatter kernels into its critical path. If your accelerator doesn't support CUDA, your GNN doesn't run.
 
-This isn't a minor compatibility issue. It means every GNN workload — autonomous driving scene understanding, drug discovery, recommendation systems — is locked to one hardware vendor. [PyG issue #1584](https://github.com/pyg-team/pytorch_geometric/issues/1584) has been open since **2020**. Five years, no fix.
+This isn't a minor compatibility issue. It means every GNN workload - autonomous driving scene understanding, drug discovery, recommendation systems - is locked to one hardware vendor. [PyG issue #1584](https://github.com/pyg-team/pytorch_geometric/issues/1584) has been open since **2020**. Five years, no fix.
 
-We decided to fix it ourselves. [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg) is ~1,500 lines of pure PyTorch that replaces PyG's core operations with XLA-compatible implementations. We validated it by running [VectorWorld](https://arxiv.org/abs/2603.17652)'s full 45M-parameter VAE encoder on Trainium with pretrained weights — **numerically equivalent outputs** to the original PyG implementation.
+We decided to fix it ourselves. [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg) is ~1,500 lines of pure PyTorch that replaces PyG's core operations with XLA-compatible implementations. We validated it by running [VectorWorld](https://arxiv.org/abs/2603.17652)'s full 45M-parameter VAE encoder on Trainium with pretrained weights - **numerically equivalent outputs** to the original PyG implementation.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -33,13 +33,13 @@ PyTorch Geometric's XLA incompatibility comes from three categories of operation
 
 - **CUDA-specific scatter kernels.** `torch_scatter` provides `scatter_add`, `scatter_mean`, `scatter_max` as custom CUDA extensions. No XLA lowering exists.
 - **Dynamic shapes from sparse operations.** GNN neighborhoods are variable-size. PyG handles this with dynamic indexing that XLA's ahead-of-time compiler can't trace.
-- **Python control flow in critical paths.** A naive `scatter_max` iterates with Python `for`/`if` — breaking XLA graph tracing.
+- **Python control flow in critical paths.** A naive `scatter_max` iterates with Python `for`/`if` - breaking XLA graph tracing.
 
 neuron-pyg replaces each with XLA-compatible alternatives using `scatter_add_()`, vectorized one-hot masking for `scatter_max`, and gradient-safe softmax with arithmetic clamping.
 
 ## Numerically equivalent outputs
 
-We loaded identical weights into both the original PyG-based VectorWorld layers and their neuron-pyg replacements, fed identical inputs, and compared outputs. Across four core layers — AttentionLayerDiT, AttentionLayer, EdgeFeatureUpdate, and GlobalContextFusion — **all outputs matched within tolerance** (atol=1e-5, rtol=1e-4). The underlying scatter and softmax operations produce numerically equivalent results because they implement the same mathematical operations — just without the CUDA dispatch layer.
+We loaded identical weights into both the original PyG-based VectorWorld layers and their neuron-pyg replacements, fed identical inputs, and compared outputs. Across four core layers - AttentionLayerDiT, AttentionLayer, EdgeFeatureUpdate, and GlobalContextFusion - **all outputs matched within tolerance** (atol=1e-5, rtol=1e-4). The underlying scatter and softmax operations produce numerically equivalent results because they implement the same mathematical operations - just without the CUDA dispatch layer.
 
 ## Validation: VectorWorld's VAE encoder
 
@@ -72,10 +72,10 @@ Training loss drops from 456.5 to 70.9 (−84.5%) over 50 steps with a median st
     </div>
 </div>
 <div class="caption">
-    Left: One-time XLA compilation cost. Right: Amortized cost per training step — after 1000 steps, overhead converges to the 178.6ms cached step time.
+    Left: One-time XLA compilation cost. Right: Amortized cost per training step - after 1000 steps, overhead converges to the 178.6ms cached step time.
 </div>
 
-The Neuron compiler persists compiled NEFFs to disk. On re-runs with the same model and shapes, all graphs load from cache — reducing warmup from minutes to milliseconds. **Compile once, run thousands of times.**
+The Neuron compiler persists compiled NEFFs to disk. On re-runs with the same model and shapes, all graphs load from cache - reducing warmup from minutes to milliseconds. **Compile once, run thousands of times.**
 
 ## Limitations
 
