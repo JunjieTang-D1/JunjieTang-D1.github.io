@@ -12,7 +12,7 @@ toc:
 
 The GNN community has a hidden dependency problem. PyTorch Geometric — the library underneath virtually every graph neural network in production, with 23,000+ GitHub stars — hardcodes CUDA scatter kernels into its critical path. If your accelerator isn't an NVIDIA GPU, your GNN doesn't run.
 
-This isn't a minor compatibility issue. It means every GNN workload — autonomous driving scene understanding, drug discovery, recommendation systems — is locked to one hardware vendor. AWS Trainium, Google TPUs, Intel Gaudi — all blocked. [PyG issue #1584](https://github.com/pyg-team/pytorch_geometric/issues/1584) has been open since **2020**. Five years, no fix.
+This isn't a minor compatibility issue. It means every GNN workload — autonomous driving scene understanding, drug discovery, recommendation systems — is locked to one hardware vendor. AWS Trainium, Intel Gaudi — all blocked. [PyG issue #1584](https://github.com/pyg-team/pytorch_geometric/issues/1584) has been open since **2020**. Five years, no fix.
 
 We decided to fix it ourselves. [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg) is ~1,500 lines of pure PyTorch that replaces PyG's core operations with XLA-compatible implementations. We validated it by running [VectorWorld](https://arxiv.org/abs/2603.17652)'s full 45M-parameter VAE encoder on Trainium with pretrained weights — **byte-identical outputs** to the original PyG implementation, inference at 55.7ms, and training convergence verified over 50 steps.
 
@@ -33,9 +33,9 @@ The standard reaction might be: "Just use a GPU." But the CUDA lock-in problem c
 
 **1. Cost.** Trainium delivers 2–4× better cost-per-TFLOP than equivalent GPU instances for many workloads. If your GNN can't run on it, you're paying a hardware tax.
 
-**2. Availability.** GPU capacity is chronically constrained. Trainium and TPU capacity is often available when GPUs aren't.
+**2. Availability.** GPU capacity is chronically constrained. Trainium capacity is often available when GPUs aren't.
 
-**3. Future-proofing.** Every new AI accelerator (Trainium2, TPU v6, Gaudi3) uses XLA or similar ahead-of-time compilation. Code that only works on CUDA is code with an expiration date.
+**3. Future-proofing.** Every new AI accelerator (Trainium2, Gaudi3) uses XLA or similar ahead-of-time compilation. Code that only works on CUDA is code with an expiration date.
 
 The deeper issue: PyG's architecture assumes runtime access to CUDA kernels. This was a reasonable design choice in 2019 when PyG was created. It's now a liability — one that blocks an entire class of models from running on the fastest-growing segment of AI hardware.
 
@@ -205,7 +205,7 @@ The Neuron compiler persists compiled NEFFs to disk. On re-runs with the same mo
 
 **Gradient safety over mathematical purity.** Using `-1e9` instead of `-inf` for empty groups is technically incorrect. But `-inf` causes NaN gradients on XLA. We choose "works correctly in practice" over "mathematically precise but unusable."
 
-**Zero PyG dependency at runtime.** neuron-pyg imports only `torch`. It works on any XLA backend — Trainium, Inferentia, TPU — without PyG's CUDA dependencies.
+**Zero PyG dependency at runtime.** neuron-pyg imports only `torch`. It works on any XLA backend — Trainium, Inferentia — without PyG's CUDA dependencies.
 
 ## Limitations
 
@@ -219,11 +219,11 @@ The Neuron compiler persists compiled NEFFs to disk. On re-runs with the same mo
 
 ## Implications
 
-**For GNN practitioners:** If your model uses PyG and you want to run it on Trainium or TPU, `pip install neuron-pyg` and swap your PyG imports. 67 tests verify correctness. Byte-identical outputs guarantee your model behaves the same.
+**For GNN practitioners:** If your model uses PyG and you want to run it on Trainium, `pip install neuron-pyg` and swap your PyG imports. 67 tests verify correctness. Byte-identical outputs guarantee your model behaves the same.
 
 **For PyG maintainers:** We plan to submit a PR adding XLA-compatible scatter and softmax backends, building on [issue #1584](https://github.com/pyg-team/pytorch_geometric/issues/1584). The backends can coexist with CUDA — activated when `device.type == 'xla'`.
 
-**For the accelerator ecosystem:** The GNN community's CUDA dependency is not a fundamental algorithmic limitation. It's three operations. ~1,500 lines fix it. Every XLA-based accelerator — Trainium, TPU, Gaudi — benefits from the same approach.
+**For the accelerator ecosystem:** The GNN community's CUDA dependency is not a fundamental algorithmic limitation. It's three operations. ~1,500 lines fix it. Every XLA-based accelerator — Trainium, Gaudi — benefits from the same approach.
 
 ## What's next
 
