@@ -2,7 +2,7 @@
 layout: post
 title: "Running Graph Neural Networks on AWS Trainium Without PyTorch Geometric"
 date: 2026-03-19
-description: "PyTorch Geometric doesn't compile on XLA. We built neuron-pyg — a ~1,500-line drop-in replacement — and ran VectorWorld's full 45M-parameter VAE encoder on Trainium with pretrained weights. Byte-identical to PyG outputs."
+description: "PyTorch Geometric doesn't compile on XLA. We built neuron-pyg — a ~1,500-line drop-in replacement — and ran VectorWorld's full 45M-parameter VAE encoder on Trainium with pretrained weights. Numerically equivalent to PyG outputs."
 tags: [aws, ai, ml, trainium, gnn, xla]
 toc:
   beginning: true
@@ -14,7 +14,7 @@ The GNN community has a hidden dependency problem. PyTorch Geometric — the lib
 
 This isn't a minor compatibility issue. It means every GNN workload — autonomous driving scene understanding, drug discovery, recommendation systems — is locked to one hardware vendor. [PyG issue #1584](https://github.com/pyg-team/pytorch_geometric/issues/1584) has been open since **2020**. Five years, no fix.
 
-We decided to fix it ourselves. [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg) is ~1,500 lines of pure PyTorch that replaces PyG's core operations with XLA-compatible implementations. We validated it by running [VectorWorld](https://arxiv.org/abs/2603.17652)'s full 45M-parameter VAE encoder on Trainium with pretrained weights — **byte-identical outputs** to the original PyG implementation.
+We decided to fix it ourselves. [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg) is ~1,500 lines of pure PyTorch that replaces PyG's core operations with XLA-compatible implementations. We validated it by running [VectorWorld](https://arxiv.org/abs/2603.17652)'s full 45M-parameter VAE encoder on Trainium with pretrained weights — **numerically equivalent outputs** to the original PyG implementation.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -37,15 +37,15 @@ PyTorch Geometric's XLA incompatibility comes from three categories of operation
 
 neuron-pyg replaces each with XLA-compatible alternatives using `scatter_add_()`, vectorized one-hot masking for `scatter_max`, and gradient-safe softmax with arithmetic clamping.
 
-## Byte-identical outputs
+## Numerically equivalent outputs
 
-We loaded identical weights into both the original PyG-based VectorWorld layers and their neuron-pyg replacements, fed identical inputs, and compared outputs element-by-element. Across all seven core layers — ResidualMLP, AttentionLayer (homogeneous and bipartite), EdgeFeatureUpdate, and three AutoEncoderBlock variants — **every output matched bit-for-bit**. Max absolute error: 0.00 across the board.
+We loaded identical weights into both the original PyG-based VectorWorld layers and their neuron-pyg replacements, fed identical inputs, and compared outputs. Across four core layers — AttentionLayerDiT, AttentionLayer, EdgeFeatureUpdate, and GlobalContextFusion — **all outputs matched within tolerance** (atol=1e-5, rtol=1e-4). The underlying scatter and softmax operations produce numerically equivalent results because they implement the same mathematical operations — just without the CUDA dispatch layer.
 
 ## Validation: VectorWorld's VAE encoder
 
 [VectorWorld](https://arxiv.org/abs/2603.17652) (Jiang et al., 2026) is a streaming world model for autonomous driving that uses PyG extensively. Its VAE encoder exercises every neuron-pyg primitive: 45M parameters, 3 transformer blocks × 4 attention layers, lane-to-lane self-attention, agent-to-agent self-attention, cross-attention, and edge feature updates.
 
-The migration: **2 import lines changed** in the core layers file (`layers.py`). No model modifications. Pretrained checkpoint loads directly.
+The migration: **2 import lines changed** in the layers file, with the underlying scatter and softmax implementations rewritten for XLA. No model architecture modifications. Pretrained checkpoint loads directly.
 
 ### Inference with pretrained weights
 
