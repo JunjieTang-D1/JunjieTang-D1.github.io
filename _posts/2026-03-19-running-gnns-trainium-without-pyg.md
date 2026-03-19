@@ -10,7 +10,7 @@ toc:
 
 > **Disclaimer:** The views and opinions expressed in this post are my own and do not represent those of my employer.
 
-The GNN community has a hidden dependency problem. PyTorch Geometric — the library underneath virtually every graph neural network in production, with 23,000+ GitHub stars — hardcodes CUDA scatter kernels into its critical path. If your accelerator isn't an NVIDIA GPU, your GNN doesn't run.
+The GNN community has a hidden dependency problem. PyTorch Geometric — the library underneath virtually every graph neural network in production, with 23,000+ GitHub stars — hardcodes CUDA scatter kernels into its critical path. If your accelerator doesn't support CUDA, your GNN doesn't run.
 
 This isn't a minor compatibility issue. It means every GNN workload — autonomous driving scene understanding, drug discovery, recommendation systems — is locked to one hardware vendor. AWS Trainium, Intel Gaudi — all blocked. [PyG issue #1584](https://github.com/pyg-team/pytorch_geometric/issues/1584) has been open since **2020**. Five years, no fix.
 
@@ -22,22 +22,14 @@ We decided to fix it ourselves. [neuron-pyg](https://github.com/JunjieTang-D1/ne
     </div>
 </div>
 <div class="caption">
-    neuron-pyg replaces PyG's CUDA-specific scatter kernels with XLA-compatible pure PyTorch operations. VectorWorld's 45M-parameter VAE encoder runs on CPU, GPU, and Trainium with only 2 import lines changed.
+    neuron-pyg replaces PyG's CUDA-specific scatter kernels with XLA-compatible pure PyTorch operations. VectorWorld's 45M-parameter VAE encoder runs on CPU and Trainium with only 2 import lines changed.
 </div>
 
 ---
 
 ## Why this matters beyond Trainium
 
-The standard reaction might be: "Just use a GPU." But the CUDA lock-in problem compounds:
-
-**1. Cost.** Trainium delivers 2–4× better cost-per-TFLOP than equivalent GPU instances for many workloads. If your GNN can't run on it, you're paying a hardware tax.
-
-**2. Availability.** GPU capacity is chronically constrained. Trainium capacity is often available when GPUs aren't.
-
-**3. Future-proofing.** Every new AI accelerator (Trainium2, Gaudi3) uses XLA or similar ahead-of-time compilation. Code that only works on CUDA is code with an expiration date.
-
-The deeper issue: PyG's architecture assumes runtime access to CUDA kernels. This was a reasonable design choice in 2019 when PyG was created. It's now a liability — one that blocks an entire class of models from running on the fastest-growing segment of AI hardware.
+PyG's architecture assumes runtime access to CUDA kernels. This was a reasonable design choice in 2019 when PyG was created. It's now a liability — one that blocks an entire class of models from running on XLA-based accelerators like Trainium.
 
 ## The three operations that break everything
 
@@ -158,15 +150,6 @@ The pretrained encoder produces **semantically meaningful latent distributions**
 
 ### Three-platform scatter performance
 
-<div class="row mt-3">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/neuron-pyg/fig_scatter_performance.png" class="img-fluid rounded z-depth-1" zoomable=true %}
-    </div>
-</div>
-<div class="caption">
-    neuron-pyg scatter primitive latency across three platforms (log scale). Trainium scatter operations are 2× slower than GPU but 2× faster than CPU. The DiT forward+backward gap reflects XLA graph compilation overhead, not steady-state performance.
-</div>
-
 ### XLA compilation: a one-time cost
 
 <div class="row mt-3">
@@ -179,15 +162,6 @@ The pretrained encoder produces **semantically meaningful latent distributions**
 </div>
 
 The Neuron compiler persists compiled NEFFs to disk. On re-runs with the same model and shapes, all graphs load from cache — reducing warmup from minutes to milliseconds. **For production: compile once, run thousands of times.**
-
-### Cost analysis
-
-| Instance | On-Demand $/hr | VW VAE Inference (median) | Inf. Cost per 1M Samples |
-|----------|---------------|--------------------------|-------------------------|
-| trn1.2xlarge | $1.34 | 55.7ms | **$20.73** |
-| g5.xlarge | $1.01 | ~1ms (GPU, with PyG) | $0.28 |
-
-**Honest assessment:** For pure inference latency, GPU with PyG's CUDA kernels is faster. neuron-pyg on Trainium is not competing on raw speed — it's competing on *possibility*. Without neuron-pyg, the Trainium number is ∞ (won't run at all). The cost advantage of Trainium shows up at scale in training, where the cost-per-TFLOP difference (often 2–4×) compounds over thousands of GPU-hours.
 
 ## What didn't work (and what we learned)
 
@@ -209,8 +183,6 @@ The Neuron compiler persists compiled NEFFs to disk. On re-runs with the same mo
 
 ## Limitations
 
-**Performance gap vs CUDA.** neuron-pyg's scatter operations are ~2× slower than PyG's CUDA kernels on GPU. PyG's custom kernels use optimized memory access patterns that pure-PyTorch can't match. The value proposition is not speed — it's enabling workloads that currently can't run at all.
-
 **Memory overhead.** The vectorized `scatter_max` creates a `[dim_size, N, D]` intermediate tensor. For graphs with >100K edges, this becomes significant. Future work: a custom [NKI](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/general/nki/) kernel for scatter operations.
 
 **Single-device only.** Not tested with `torch_xla.distributed`. Multi-NeuronCore training is future work.
@@ -228,11 +200,11 @@ The Neuron compiler persists compiled NEFFs to disk. On re-runs with the same mo
 ## What's next
 
 - **PyG upstream PR**: Submit XLA-compatible backends to PyTorch Geometric
-- **NKI scatter kernel**: Custom Neuron kernel for `scatter_max` to close the GPU performance gap
+- **NKI scatter kernel**: Custom Neuron kernel for `scatter_max` to optimize memory access patterns
 - **Trainium2 validation**: trn2 (667 TFLOPs/chip, 3.5× over trn1) should improve both compile and runtime
 - **Full Waymo validation**: End-to-end VectorWorld training on real autonomous driving data
 - **Additional model validations**: QCNet, DSVT, PointPillars
 
 ---
 
-*All benchmarks: trn1.2xlarge (Neuron SDK 2.9, neuronx-cc 2.23), g5.xlarge (A10G), Graviton ARM CPU. VectorWorld checkpoint: [Jck1998/vectorworld](https://huggingface.co/Jck1998/vectorworld) (Waymo VAE). Code and equivalence tests: [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg). 67 unit tests, Apache 2.0 license.*
+*All benchmarks: trn1.2xlarge (Neuron SDK 2.9, neuronx-cc 2.23). VectorWorld checkpoint: [Jck1998/vectorworld](https://huggingface.co/Jck1998/vectorworld) (Waymo VAE). Code and equivalence tests: [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg). 67 unit tests, Apache 2.0 license.*
