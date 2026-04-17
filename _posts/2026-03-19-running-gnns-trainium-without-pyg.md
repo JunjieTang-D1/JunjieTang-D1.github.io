@@ -4,6 +4,7 @@ title: "Running Graph Neural Networks on AWS Trainium Without PyTorch Geometric"
 date: 2026-03-19
 description: "PyTorch Geometric doesn't compile on XLA. We built neuron-pyg - a ~1,500-line drop-in replacement - and ran VectorWorld's full 45M-parameter VAE encoder on Trainium with pretrained weights. Numerically equivalent to PyG outputs."
 tags: [aws, ai, ml, trainium, gnn, xla]
+published: false
 toc:
   beginning: true
 ---
