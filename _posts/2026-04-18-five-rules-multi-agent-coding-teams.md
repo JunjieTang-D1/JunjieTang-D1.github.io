@@ -26,7 +26,7 @@ If you only read this far: start there. The rest of the post answers *why* each 
 
 ## What the data looks like
 
-I built AgentCorp, a framework that runs N LLM agents through a simulated 10-day sprint against a project specification, with a shared repo, per-agent scopes, and a nightly integration suite. Two target domains: a Physical AI factory (digital twin, RL assembly, AGV routing, edge deployment) and — in earlier runs — a generic product sprint. Model: Claude Opus 4.6 for planner and judge, Claude Sonnet 4.6 for workers. Opus 4.7 runs exist but are preliminary (N=1) and excluded from the main results. The complete run artifacts are open-sourced.
+I built AgentCorp, a framework that runs N LLM agents through a simulated 10-day sprint against a project specification, with a shared repo, per-agent scopes, and a nightly integration suite. Two target domains: a Physical AI factory (digital twin, RL assembly, AGV routing, edge deployment) and — in earlier runs — a generic product sprint. Model: Claude Opus 4.6 for planner and judge, Claude Sonnet 4.6 for workers. Opus 4.7 runs exist but are preliminary (N=1) and excluded from the main results. The complete run artifacts will be open-sourced (coming soon).
 
 **What I'm claiming, and what I'm not.** I'm claiming the five rules above are necessary conditions for producing a deployable repository from an LLM team over a multi-day horizon. I'm not claiming they're sufficient, and I'm not claiming the agents' own test suites prove the resulting software works — that's a real limitation and the last section addresses it directly.
 
@@ -166,7 +166,7 @@ All three completed under three hours on a single arm64 EC2 instance (61 GB, 8 v
 
 These are identical-input reruns — they establish bounded LLM sampling variance on a fixed task, not cross-task generalization. Cross-domain data from earlier Stripe runs is available on request and in the repo; I didn't foreground it here because the methodology shifted between domains.
 
-**Post-hoc fixes, disclosed:** pytest timeout config added to all runs to handle hanging subprocess tests; one 1-line dataclass fix in Run 3 (`description: str` → `description: str = ""`) without which zero tests collect; one test-code fix in Run 3 to skip CDK synthesis tests that spawn unkillable Java subprocesses. Runs 1 and 2 had no source-code changes. All fixes are in the commit history of the open-source release.
+**Post-hoc fixes, disclosed:** pytest timeout config added to all runs to handle hanging subprocess tests; one 1-line dataclass fix in Run 3 (`description: str` → `description: str = ""`) without which zero tests collect; one test-code fix in Run 3 to skip CDK synthesis tests that spawn unkillable Java subprocesses. Runs 1 and 2 had no source-code changes. All fixes are documented and will be visible in the commit history of the upcoming open-source release.
 
 **A note on cost.** I don't have precise per-run cost numbers to publish — the token counter in the sprint harness was wired for cost logging but never instrumented end-to-end, so every `cost_usd` field in the run artifacts reports `0.0`. Wall-clock per run was ~3 hours on a single EC2 instance. A 5-agent team with an Opus planner + judge and Sonnet workers across a 10-day sprint with ~1,200 tool calls per run lands in the high-single-digit to low-double-digit USD range at current Bedrock pricing, based on my back-of-envelope sampling — but I won't claim a number I didn't measure. Adding proper token accounting is on the roadmap.
 
