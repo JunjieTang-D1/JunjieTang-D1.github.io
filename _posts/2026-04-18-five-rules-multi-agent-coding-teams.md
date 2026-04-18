@@ -178,17 +178,19 @@ These are identical-input reruns — they establish bounded LLM sampling varianc
 
 The rubric that exposed the issue. An earlier configuration scored **9.3/10 on process metrics** — clean code, strong docs, excellent coordination. Then I checked the tests: **44% pass rate.** Beautiful, disconnected code.
 
-The 5-pillar framework I built after that:
+That forced a rethink. A single overall score hides too much. I needed a framework that separates *how well the agents follow instructions* from *whether the output actually works*. The 5-pillar framework I built after that:
 
-| Pillar | What it catches |
-|---|---|
-| **LLM Quality** | Instruction-following, safety, code structure |
-| **Memory** | Cross-day context retention |
-| **Tools** | Tool call success, appropriate selection |
-| **Environment** | AWS service accuracy, guardrails |
-| **Outcome** | Test pass rate, deployment readiness, story completion |
+| Pillar | What it measures | Why it matters |
+|---|---|---|
+| **LLM Quality** | Instruction-following, code structure, documentation quality, safety compliance | Catches agents that write plausible but wrong code — hallucinated APIs, ignored constraints, unsafe patterns |
+| **Memory** | Cross-day context retention, decision consistency, scratchpad usage | A 10-day sprint is useless if agents forget day 3's architecture decisions by day 7. This pillar catches context drift |
+| **Tools** | Tool call success rate, appropriate tool selection, error recovery | Agents that call the wrong tool or fail silently waste entire sprint days. Measures whether the agent-tool interface is reliable |
+| **Environment** | AWS service naming accuracy, IAM policy correctness, resource configuration, guardrails | The difference between `sagemaker:CreateEndpoint` and a hallucinated API. Wrong service names mean nothing deploys |
+| **Outcome** | Test pass rate, deployment readiness (Docker builds, entry point works), story completion, integration test results | The only pillar that answers: *does it run?* Everything else is process. This is the product |
 
-The Outcome pillar is the only one that separates *"passes a review"* from *"runs in production"*. Any agent evaluation without an Outcome pillar is measuring politeness, not capability.
+**How scoring works.** Claude Sonnet 4.6 at temperature 0.0 evaluates each pillar on a 1–10 scale against the project specification and sprint artifacts. The low variance across reruns (SD = 0.05) reflects both genuine output stability and judge determinism at temp-0 — the two are entangled in this setup. The scores are a *directional* signal, not ground truth.
+
+**The key insight:** the first four pillars can all score 9+ while Outcome scores 4. That's exactly what happened in early runs. The Outcome pillar is the only one that separates *"passes a review"* from *"runs in production"*. Any agent evaluation without an Outcome pillar is measuring politeness, not capability.
 
 ## What to do with this
 
