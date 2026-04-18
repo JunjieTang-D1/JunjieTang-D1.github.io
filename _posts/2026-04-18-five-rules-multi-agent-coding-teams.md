@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Five Rules for Multi-Agent Coding Teams — Derived From 40 Controlled Experiments"
-date: 2026-04-19
+date: 2026-04-18
 description: "40 controlled experiments across 13 configurations reveal 5 operating rules for multi-agent LLM coding teams: smaller teams win, shared directory with scoped writes, nightly tests with failure injection, dedicated DevOps agent, N≥2 runs per config."
 tags: [ai, ml, agentic-ai, multi-agent, llm, software-engineering]
 toc:
