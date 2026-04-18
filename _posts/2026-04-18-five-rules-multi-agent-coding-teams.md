@@ -26,7 +26,11 @@ If you only read this far: start there. The rest of the post answers *why* each 
 
 ## What the data looks like
 
-I built AgentCorp, a framework that runs N LLM agents through a simulated 10-day sprint against a project specification, with a shared repo, per-agent scopes, and a nightly integration suite. Two target domains: a Physical AI factory (digital twin, RL assembly, AGV routing, edge deployment) and — in earlier runs — a generic product sprint. Model: Claude Opus 4.6 for planner and judge, Claude Sonnet 4.6 for workers. Opus 4.7 runs exist but are preliminary (N=1) and excluded from the main results. The complete run artifacts will be open-sourced (coming soon).
+I built AgentCorp, a framework that runs N LLM agents through a simulated 10-day sprint against a project specification, with a shared repo, per-agent scopes, and a nightly integration suite. Model: Claude Opus 4.6 for planner and judge, Claude Sonnet 4.6 for workers. Opus 4.7 runs exist but are preliminary (N=1) and excluded from the main results. The complete run artifacts will be open-sourced (coming soon).
+
+**The target project: a Physical AI factory.** Digital twin with OEE monitoring, CV-based defect detection on SageMaker, predictive maintenance with time-series anomaly detection, AGV routing with constraint solvers, RL-trained robotic assembly on HyperPod, edge deployment via Greengrass, and a governance layer (AgentCore) tying it all together. Real AWS service calls, mock physical interfaces, 14 user stories, 43 story points.
+
+{% include figure.liquid path="assets/img/agentcorp-v4-architecture.png" class="img-fluid rounded z-depth-1" zoomable=true caption="AgentCorp V4: Planner decomposes stories, 5 domain workers implement in scoped modules, Judge gates quality at day 5 and 10, nightly integration tests feed failures back into the next day." %}
 
 **What I'm claiming, and what I'm not.** I'm claiming the five rules above are necessary conditions for producing a deployable repository from an LLM team over a multi-day horizon. I'm not claiming they're sufficient, and I'm not claiming the agents' own test suites prove the resulting software works — that's a real limitation and the last section addresses it directly.
 
