@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Five Rules for Multi-Agent Coding Teams — Derived From 40 Controlled Experiments"
+title: "Five Rules for Multi-Agent Coding Teams — Derived From 27 Controlled Experiments"
 date: 2026-04-18
-description: "40 controlled experiments across 13 configurations reveal 5 operating rules for multi-agent LLM coding teams: smaller teams win, shared directory with scoped writes, nightly tests with failure injection, dedicated DevOps agent, N≥2 runs per config."
+description: "27 controlled experiments across 13 configurations reveal 5 operating rules for multi-agent LLM coding teams: smaller teams win, shared directory with scoped writes, nightly tests with failure injection, dedicated DevOps agent, N≥2 runs per config."
 tags: [ai, ml, agentic-ai, multi-agent, llm, software-engineering]
 toc:
   beginning: true
@@ -13,7 +13,7 @@ toc:
 
 Most multi-agent coding demos are indistinguishable from each other. A team of LLMs builds something. Screenshots get posted. Nobody tries to deploy it, and if they did, it wouldn't run. The field doesn't lack demos. It lacks *operating rules* — the load-bearing decisions that separate teams that produce deployable software from teams that produce interesting-looking artifacts.
 
-This post presents five such rules, derived from 40 controlled experiments across two domains and two model generations. A one-page summary of the rules lives at [AGENTS.md](https://github.com/JunjieTang-D1/agents-md/blob/main/AGENTS.md). This post gives the reasoning, the evidence, and the limitations behind them.
+This post presents five such rules, derived from 27 controlled experiments across two domains and two model generations. A one-page summary of the rules lives at [AGENTS.md](https://github.com/JunjieTang-D1/agents-md/blob/main/AGENTS.md). This post gives the reasoning, the evidence, and the limitations behind them.
 
 > **The five rules:**
 > 1. Default to 3–5 agents.
@@ -38,7 +38,7 @@ I built AgentCorp, a framework that runs N LLM agents through a simulated 10-day
 
 **The trap.** More agents is the obvious first move. More specialization, more parallelism, more throughput. It's how human teams scale.
 
-**What I found.** Across 36 controlled baseline runs (3 complexities × 2 team sizes × 3 repeats, LLM-judged artifact quality), 5-agent teams outperformed 10-agent teams on every complexity level and every repeat. The verified average across 1-week and 2-week sprints:
+**What I found.** Across 18 controlled baseline runs (3 complexities × 2 team sizes × 3 repeats, LLM-judged artifact quality), 5-agent teams outperformed 10-agent teams on every complexity level and every repeat. The verified average across 1-week and 2-week sprints:
 
 | Sprint | 5-agent (N=3) | 10-agent (N=3) | Δ |
 |---|:-:|:-:|:-:|
@@ -166,7 +166,7 @@ Supporting evidence for the rules above. Three identical runs of the 5-agent con
 | Deployment artifacts present | all | all | all | — |
 | `docker build` succeeds | yes | yes | yes | — |
 
-All three completed under three hours on a single arm64 EC2 instance (61 GB, 8 vCPU). Pillar score SD = 0.05 — partly output stability, partly the temp-0 judge returning similar scores on similar artifacts; I can't fully disentangle these in the current harness. For calibration, the best 5-pillar score across all 40 experiments in the dataset was 7.27 (9-agent Stripe configuration); the 6.93 mean here sits in the upper-middle of observed scores but well below what the framework is capable of producing at its peak. The 5-pillar average is capped implicitly by the Outcome pillar, which is limited by how much of the work is verifiable — the next section explains why.
+All three completed under three hours on a single arm64 EC2 instance (61 GB, 8 vCPU). Pillar score SD = 0.05 — partly output stability, partly the temp-0 judge returning similar scores on similar artifacts; I can't fully disentangle these in the current harness. For calibration, the best 5-pillar score across all 27 experiments in the dataset was 7.27 (9-agent Stripe configuration); the 6.93 mean here sits in the upper-middle of observed scores but well below what the framework is capable of producing at its peak. The 5-pillar average is capped implicitly by the Outcome pillar, which is limited by how much of the work is verifiable — the next section explains why.
 
 These are identical-input reruns — they establish bounded LLM sampling variance on a fixed task, not cross-task generalization. Cross-domain data from earlier Stripe runs is available on request and in the repo; I didn't foreground it here because the methodology shifted between domains.
 
