@@ -166,9 +166,9 @@ Supporting evidence for the rules above. Three identical runs of the 5-agent con
 | Deployment artifacts present | all | all | all | — |
 | `docker build` succeeds | yes | yes | yes | — |
 
-All three completed under three hours on a single arm64 EC2 instance (61 GB, 8 vCPU). Pillar score SD = 0.05 — partly output stability, partly the temp-0 judge returning similar scores on similar artifacts; I can't fully disentangle these in the current harness. For calibration, the best 5-pillar score across all 27 experiments in the dataset was 7.27 (9-agent Stripe configuration); the 6.93 mean here sits in the upper-middle of observed scores but well below what the framework is capable of producing at its peak. The 5-pillar average is capped implicitly by the Outcome pillar, which is limited by how much of the work is verifiable — the next section explains why.
+All three completed under three hours on a single arm64 EC2 instance (61 GB, 8 vCPU). Pillar score SD = 0.05 — partly output stability, partly the temp-0 judge returning similar scores on similar artifacts; I can't fully disentangle these in the current harness. For calibration, the 6.93 mean sits in the upper-middle of the score range this framework produces; the best observed single-run score across the full experiment set was 7.27. The 5-pillar average is capped implicitly by the Outcome pillar, which is limited by how much of the work is verifiable — the next section explains why.
 
-These are identical-input reruns — they establish bounded LLM sampling variance on a fixed task, not cross-task generalization. Cross-domain data from earlier Stripe runs is available on request and in the repo; I didn't foreground it here because the methodology shifted between domains.
+These are identical-input reruns — they establish bounded LLM sampling variance on a fixed task, not cross-task generalization.
 
 **Post-hoc fixes, disclosed:** pytest timeout config added to all runs to handle hanging subprocess tests; one 1-line dataclass fix in Run 3 (`description: str` → `description: str = ""`) without which zero tests collect; one test-code fix in Run 3 to skip CDK synthesis tests that spawn unkillable Java subprocesses. Runs 1 and 2 had no source-code changes. All fixes are documented and will be visible in the commit history of the upcoming open-source release.
 
