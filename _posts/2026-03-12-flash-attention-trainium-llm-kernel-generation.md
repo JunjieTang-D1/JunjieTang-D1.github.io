@@ -2,7 +2,7 @@
 layout: post
 title: "FlashAttention on Trainium: Can an LLM Write Expert-Level Hardware Kernels?"
 date: 2026-03-12
-description: "We benchmark 10 NKI attention kernels on AWS Trainium, then show that Claude Opus 4.6 can automatically generate a kernel matching the best hand-optimized performance — the first demonstration of LLM-driven kernel generation matching expert-level results on a custom accelerator."
+description: "We benchmark 10 NKI attention kernels on AWS Trainium, then show that an LLM agent can match a strong hand-optimized NKI attention kernel through iterative compile–verify–benchmark feedback — no RL, no fine-tuning."
 tags: [aws, ai, ml, agentic-ai, trainium, nki]
 toc:
   beginning: true
@@ -12,7 +12,7 @@ toc:
 
 An LLM just wrote a hardware kernel that matches hand-optimized expert code. No RL training. No fine-tuning. Just iterative compile–verify–benchmark feedback.
 
-Claude Opus 4.6, operating through a [Strands Agent](https://github.com/strands-agents/sdk-python) loop, generated an [NKI](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/general/nki/) attention kernel for [AWS Trainium](https://aws.amazon.com/ai/machine-learning/trainium/) that matches the best hand-optimized v7 kernel across all sequence lengths — 400 μs at 4K, 6,236 μs at 16K. To our knowledge, this is the **first demonstration of an LLM automatically generating a hardware kernel matching expert-level performance on a custom accelerator**.
+Claude Opus 4.6, operating through a [Strands Agent](https://github.com/strands-agents/sdk-python) loop, generated an [NKI](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/general/nki/) attention kernel for [AWS Trainium](https://aws.amazon.com/ai/machine-learning/trainium/) that matches the strong hand-optimized v7 kernel across all sequence lengths — 400 μs at 4K, 6,236 μs at 16K. This is a demonstration of **an LLM agent matching a strong hand-optimized NKI attention kernel through iterative compile–verify–benchmark feedback** — no RL, no fine-tuning.
 
 ---
 

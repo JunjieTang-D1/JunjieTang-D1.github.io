@@ -1,5 +1,6 @@
 ---
 layout: post
+published: false
 title: "Beating Claude Opus 4.5 at Kernel Generation with a 3B-Active RL Agent"
 date: 2026-03-07
 description: "A 30B MoE model with only 26.7M LoRA parameters generates faster NKI kernels than Claude Opus 4.5 — achieving 1.47x speedup and 94% fast rate on 250 benchmark tasks."
