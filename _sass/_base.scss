@@ -323,6 +323,13 @@ ul.task-list input[type="checkbox"] {
       }
     }
   }
+
+  // Core identity icons pinned to the right of the nav links (scholar, github)
+  .navbar-nav .nav-item.navbar-social-icon .nav-link {
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+  }
 }
 
 .navbar-toggler {
