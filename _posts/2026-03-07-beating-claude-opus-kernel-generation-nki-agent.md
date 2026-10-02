@@ -123,7 +123,7 @@ At Level 3, 14% of tasks fail to produce a faster-than-eager kernel. The failure
 
 ## Practical takeaways
 
-**For RL-for-code researchers:** Hardware-aware reward shaping is high-leverage. Reward the *way* hardware is used, not just correctness and speed. MoE models are excellent RL bases — broad knowledge, cheap training.
+**For RL-for-code researchers:** Hardware-aware reward shaping is high-leverage. Reward the _way_ hardware is used, not just correctness and speed. MoE models are excellent RL bases — broad knowledge, cheap training.
 
 **For kernel generation:** Frontier LLMs are surprisingly capable at NKI with tools (Claude Opus 4.5 gets 76% fast rate), but plateau on multi-engine optimization. A compile-verify-profile loop is essential. Warm starting matters more than any single reward component.
 
@@ -144,19 +144,18 @@ For NKI kernel development, start with an [Amazon EC2 Trn1 instance](https://aws
 
 ## References
 
-1. **CUDA-Agent** — Wu et al., *Agentic Reinforcement Learning for CUDA Kernel Generation*, [arXiv:2602.24286](https://arxiv.org/abs/2602.24286), 2026. The direct inspiration for this work; we adapt the agentic RL approach from CUDA to NKI.
-2. **KernelBench** — Ouyang et al., *Can LLMs Write GPU Kernels?*, [arXiv:2502.10517](https://arxiv.org/abs/2502.10517), 2025. Benchmark and task formulation we adapted for NKI.
-3. **PPO** — Schulman et al., *Proximal Policy Optimization Algorithms*, [arXiv:1707.06347](https://arxiv.org/abs/1707.06347), 2017. Core RL algorithm; we extend with asymmetric clipping.
-4. **CodeRL** — Le et al., *Mastering Code Generation through Pretrained Models and Deep Reinforcement Learning*, NeurIPS 2022. Pioneered RL for code generation with execution feedback.
-5. **PPOCoder** — Shojaee et al., *Execution-based Code Generation using Deep Reinforcement Learning*, [arXiv:2301.13816](https://arxiv.org/abs/2301.13816), 2023.
-6. **RLTF** — Liu et al., *Reinforcement Learning from Unit Test Feedback*, [arXiv:2307.04349](https://arxiv.org/abs/2307.04349), 2023.
-7. **SWE-agent** — Yang et al., *Agent-Computer Interfaces Enable Automated Software Engineering*, [arXiv:2405.15793](https://arxiv.org/abs/2405.15793), 2024. Influenced our tool-using agent design.
-8. **Toolformer** — Schick et al., *Language Models Can Teach Themselves to Use Tools*, NeurIPS 2023.
+1. **CUDA-Agent** — Wu et al., _Agentic Reinforcement Learning for CUDA Kernel Generation_, [arXiv:2602.24286](https://arxiv.org/abs/2602.24286), 2026. The direct inspiration for this work; we adapt the agentic RL approach from CUDA to NKI.
+2. **KernelBench** — Ouyang et al., _Can LLMs Write GPU Kernels?_, [arXiv:2502.10517](https://arxiv.org/abs/2502.10517), 2025. Benchmark and task formulation we adapted for NKI.
+3. **PPO** — Schulman et al., _Proximal Policy Optimization Algorithms_, [arXiv:1707.06347](https://arxiv.org/abs/1707.06347), 2017. Core RL algorithm; we extend with asymmetric clipping.
+4. **CodeRL** — Le et al., _Mastering Code Generation through Pretrained Models and Deep Reinforcement Learning_, NeurIPS 2022. Pioneered RL for code generation with execution feedback.
+5. **PPOCoder** — Shojaee et al., _Execution-based Code Generation using Deep Reinforcement Learning_, [arXiv:2301.13816](https://arxiv.org/abs/2301.13816), 2023.
+6. **RLTF** — Liu et al., _Reinforcement Learning from Unit Test Feedback_, [arXiv:2307.04349](https://arxiv.org/abs/2307.04349), 2023.
+7. **SWE-agent** — Yang et al., _Agent-Computer Interfaces Enable Automated Software Engineering_, [arXiv:2405.15793](https://arxiv.org/abs/2405.15793), 2024. Influenced our tool-using agent design.
+8. **Toolformer** — Schick et al., _Language Models Can Teach Themselves to Use Tools_, NeurIPS 2023.
 9. **Qwen3-Coder** — Qwen Team, [Qwen3-Coder-30B-A3B-Instruct](https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct), 2025. Base model for Kernel Forge.
-10. **Codex** — Chen et al., *Evaluating Large Language Models Trained on Code*, [arXiv:2107.03374](https://arxiv.org/abs/2107.03374), 2021.
-11. **AlphaCode** — Li et al., *Competition-Level Code Generation with AlphaCode*, Science 378(6624), 2022.
+10. **Codex** — Chen et al., _Evaluating Large Language Models Trained on Code_, [arXiv:2107.03374](https://arxiv.org/abs/2107.03374), 2021.
+11. **AlphaCode** — Li et al., _Competition-Level Code Generation with AlphaCode_, Science 378(6624), 2022.
 
 ---
 
-*Patent pending. The system architecture, reward formulation, and optimization methodology described in this post are subject to intellectual property protection.*
-
+_Patent pending. The system architecture, reward formulation, and optimization methodology described in this post are subject to intellectual property protection._

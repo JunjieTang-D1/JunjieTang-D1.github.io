@@ -93,4 +93,4 @@ The Neuron compiler persists compiled NEFFs to disk. On re-runs with the same mo
 
 ---
 
-*All benchmarks: trn1.2xlarge (Neuron SDK 2.9, neuronx-cc 2.23). VectorWorld checkpoint: [Jck1998/vectorworld](https://huggingface.co/Jck1998/vectorworld) (Waymo VAE). Code and equivalence tests: [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg). 67 unit tests, Apache 2.0 license.*
+_All benchmarks: trn1.2xlarge (Neuron SDK 2.9, neuronx-cc 2.23). VectorWorld checkpoint: [Jck1998/vectorworld](https://huggingface.co/Jck1998/vectorworld) (Waymo VAE). Code and equivalence tests: [neuron-pyg](https://github.com/JunjieTang-D1/neuron-pyg). 67 unit tests, Apache 2.0 license._

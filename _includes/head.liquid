@@ -2,8 +2,17 @@
 {% include metadata.liquid %}
 
 <!-- Applause Button (like button for blog posts) -->
-<link rel="stylesheet" href="https://unpkg.com/applause-button/dist/applause-button.css" />
-<script src="https://unpkg.com/applause-button/dist/applause-button.js"></script>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/applause-button@4.0.7/dist/applause-button.css"
+  integrity="sha384-kwNWgXTxe+yV8n1kL+LTKug5OGw0eNNp58jyoaLf9mnZi5AkFShr/Qw7qZACWFUV"
+  crossorigin="anonymous"
+>
+<script
+  src="https://unpkg.com/applause-button@4.0.7/dist/applause-button.js"
+  integrity="sha384-pZ9kL7Uf7MfDXwswB58pbHhOD6lIkuM3+XaBAtVUy4La+yY/oKpopaXPR2UTD3Ud"
+  crossorigin="anonymous"
+></script>
 
 <!-- Bootstrap & MDB -->
 <link rel="stylesheet" href="{{ '/assets/css/bootstrap.min.css' | relative_url | bust_file_cache }}">

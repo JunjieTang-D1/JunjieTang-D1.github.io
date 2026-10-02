@@ -23,6 +23,7 @@ Claude Opus 4.6, operating through a [Strands Agent](https://github.com/strands-
 But the GPU isn't the only game in town. AWS Trainium, with its [Neuron Kernel Interface (NKI)](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/general/nki/), offers a fundamentally different architecture. The `aws-neuron/nki-samples` repository contains 11 hand-crafted attention kernel versions, each targeting specific bottlenecks.
 
 We asked two questions:
+
 1. **How close can NKI kernels get to FlashAttention-4's utilization?**
 2. **Can an LLM write competitive kernels for this specialized hardware?**
 
@@ -61,20 +62,20 @@ We benchmarked all kernel versions on trn1.2xlarge (NeuronCC 2.23, bf16, d=128).
 
 ### Complete benchmark (p50 μs)
 
-| Kernel | 512 | 1K | 2K | 4K | 8K | 16K |
-|--------|-----|------|------|------|-------|--------|
-| v3 (tiling) | 57 | 175 | 652 | 3,130 | 13,105 | 67,733 |
-| v4 (online softmax) | 25 | 67 | 229 | 873 | 3,360 | 17,437 |
-| v5 (transpose) | 23 | 53 | 171 | 631 | 2,455 | 16,111 |
-| v6 (softmax denom) | 23 | 53 | 163 | 609 | 2,565 | 16,832 |
-| **v7 (pipelining)** | 19 | 39 | 112 | 400 | 1,526 | **6,228** |
-| v8 (PSUM eviction) | 20 | 40 | 116 | 421 | 1,613 | 8,617 |
-| v9 (flash chunking) | 23 | 43 | 118 | 429 | FAIL | FAIL |
-| v10 (baremetal) | FAIL | FAIL | FAIL | FAIL | FAIL | FAIL |
-| **v11 (combined)** | **19** | **37** | **98** | **360** | **1,387** | 35,067 |
-| **LLM Agent** | **19** | **39** | **111** | **400** | **1,526** | **6,236** |
+| Kernel              | 512    | 1K     | 2K      | 4K      | 8K        | 16K       |
+| ------------------- | ------ | ------ | ------- | ------- | --------- | --------- |
+| v3 (tiling)         | 57     | 175    | 652     | 3,130   | 13,105    | 67,733    |
+| v4 (online softmax) | 25     | 67     | 229     | 873     | 3,360     | 17,437    |
+| v5 (transpose)      | 23     | 53     | 171     | 631     | 2,455     | 16,111    |
+| v6 (softmax denom)  | 23     | 53     | 163     | 609     | 2,565     | 16,832    |
+| **v7 (pipelining)** | 19     | 39     | 112     | 400     | 1,526     | **6,228** |
+| v8 (PSUM eviction)  | 20     | 40     | 116     | 421     | 1,613     | 8,617     |
+| v9 (flash chunking) | 23     | 43     | 118     | 429     | FAIL      | FAIL      |
+| v10 (baremetal)     | FAIL   | FAIL   | FAIL    | FAIL    | FAIL      | FAIL      |
+| **v11 (combined)**  | **19** | **37** | **98**  | **360** | **1,387** | 35,067    |
+| **LLM Agent**       | **19** | **39** | **111** | **400** | **1,526** | **6,236** |
 
-**Important caveat on interpreting v3–v11:** These kernel versions are best understood as iterative experimental variants, where each version explores a different optimization idea — not as controlled single-variable ablations. Several of these techniques interact with each other: tiling affects memory reuse, transpose changes layout and memory traffic, pipelining changes execution overlap, and PSUM eviction changes on-chip memory lifetime. Because these techniques interact, performance differences between consecutive versions reflect the *combined* effect of the new technique plus any structural changes it required, rather than the isolated impact of one optimization.
+**Important caveat on interpreting v3–v11:** These kernel versions are best understood as iterative experimental variants, where each version explores a different optimization idea — not as controlled single-variable ablations. Several of these techniques interact with each other: tiling affects memory reuse, transpose changes layout and memory traffic, pipelining changes execution overlap, and PSUM eviction changes on-chip memory lifetime. Because these techniques interact, performance differences between consecutive versions reflect the _combined_ effect of the new technique plus any structural changes it required, rather than the isolated impact of one optimization.
 
 With that caveat, three findings jump out:
 
@@ -117,6 +118,7 @@ The agent also discovered algorithmic variants and memory optimization technique
 ### What the agent can't do (yet)
 
 The agent matched v7 but did not beat v11 at ≤8K. v11's edge comes from:
+
 - **Baremetal memory allocation** (`base_addr=`): Not supported on NeuronCC 2.23
 - **Software pipelining** (`sequential_range`): Caused correctness issues with dynamic indexing
 - **Compiler co-design knowledge**: v11's micro-optimizations require understanding NeuronCC's scheduling heuristics
@@ -134,21 +136,21 @@ These represent the frontier where LLM-driven generation meets compiler-specific
     Hardware utilization comparison. FlashAttention-4 on B200 achieves 71.7% of peak; the best NKI kernels reach 12.5%. The gap reflects compiler maturity and hardware features, not algorithmic limitations.
 </div>
 
-| Configuration | TFLOPs/s | Peak TFLOPs | Utilization |
-|---------------|----------|-------------|-------------|
-| FA4 on B200 | 1,613 | 2,250 | **71.7%** |
-| NKI v11 @ 4K | 23.8 | 190 | **12.5%** |
-| NKI Agent @ 4K | 21.5 | 190 | **11.3%** |
-| NKI Agent @ 16K | 22.1 | 190 | **11.6%** |
+| Configuration   | TFLOPs/s | Peak TFLOPs | Utilization |
+| --------------- | -------- | ----------- | ----------- |
+| FA4 on B200     | 1,613    | 2,250       | **71.7%**   |
+| NKI v11 @ 4K    | 23.8     | 190         | **12.5%**   |
+| NKI Agent @ 4K  | 21.5     | 190         | **11.3%**   |
+| NKI Agent @ 16K | 22.1     | 190         | **11.6%**   |
 
 The 5.7× utilization gap reflects decades of CUDA compiler maturity, Blackwell's specialized hardware features (dual math pipelines, TMA units), and the relative youth of the NKI ecosystem. It does **not** mean Trainium is 5.7× worse for your workload — economics change the equation dramatically.
 
 ## The economics: cost per attention TFLOP
 
-| Instance | Spot $/hr | Attention TFLOPs/s | $/TFLOPs/hr |
-|----------|-----------|-------------------|-------------|
-| trn1.2xlarge | $1.33 | ~43 | **$0.031** |
-| p4d.24xlarge (A100) | ~$23 | ~200 | $0.115 |
+| Instance            | Spot $/hr | Attention TFLOPs/s | $/TFLOPs/hr |
+| ------------------- | --------- | ------------------ | ----------- |
+| trn1.2xlarge        | $1.33     | ~43                | **$0.031**  |
+| p4d.24xlarge (A100) | ~$23      | ~200               | $0.115      |
 
 Trainium delivers **3.7× better cost-per-TFLOP** than A100 for attention-heavy inference. For workloads that fit Trainium's constraints (≤8K context, bf16), the economics are compelling.
 
@@ -165,15 +167,15 @@ Trainium delivers **3.7× better cost-per-TFLOP** than A100 for attention-heavy 
 
 The practical kernel selection guide:
 
-| Sequence Length | Best Kernel | Rationale |
-|----------------|------------|-----------|
-| ≤ 4K | v11 | Fastest overall (360 μs at 4K) |
-| 4K – 8K | v11 | Still fastest (1,387 μs at 8K) |
-| > 8K | v7 or Agent | Only kernels with clean O(n²) scaling |
+| Sequence Length | Best Kernel | Rationale                             |
+| --------------- | ----------- | ------------------------------------- |
+| ≤ 4K            | v11         | Fastest overall (360 μs at 4K)        |
+| 4K – 8K         | v11         | Still fastest (1,387 μs at 8K)        |
+| > 8K            | v7 or Agent | Only kernels with clean O(n²) scaling |
 
 ## Implications
 
-**For kernel engineers**: There is no universal "highest-leverage optimization" — even on the same hardware, the dominant bottleneck depends on model architecture, traffic patterns, workload characteristics, and execution context. As illustrated in the v3→v11 journey above, the right optimization lever emerges from systematic analysis: profile the model, identify the hot kernel, diagnose the actual bottleneck, then apply the corresponding technique. What we *can* recommend is a general approach: leverage agentic workflows to automate this systematic exploration and reduce the manual effort required to find the right optimization for your specific workload.
+**For kernel engineers**: There is no universal "highest-leverage optimization" — even on the same hardware, the dominant bottleneck depends on model architecture, traffic patterns, workload characteristics, and execution context. As illustrated in the v3→v11 journey above, the right optimization lever emerges from systematic analysis: profile the model, identify the hot kernel, diagnose the actual bottleneck, then apply the corresponding technique. What we _can_ recommend is a general approach: leverage agentic workflows to automate this systematic exploration and reduce the manual effort required to find the right optimization for your specific workload.
 
 **For the accelerator ecosystem**: Custom silicon faces a "kernel engineer bottleneck" — too few people understand both the hardware ISA and the algorithmic domain. If LLMs can generate competitive kernels through automated exploration, this bottleneck loosens. Trainium, TPU, Groq, Cerebras — all could benefit.
 
@@ -189,6 +191,6 @@ The practical kernel selection guide:
 
 ---
 
-*All benchmarks: trn1.2xlarge, NeuronCC 2.23, bf16, d=128. Agent: Claude Opus 4.6 via [AWS Bedrock](https://aws.amazon.com/bedrock/). Orchestration: [Strands Agents SDK](https://github.com/strands-agents/sdk-python). FlashAttention-4 numbers from [Shah et al. (arXiv 2603.05451)](https://arxiv.org/abs/2603.05451). NKI kernel implementations from [aws-neuron/nki-samples](https://github.com/aws-neuron/nki-samples). Code and data: [research-papers](https://github.com/JunjieTang-D1/research-papers).*
+_All benchmarks: trn1.2xlarge, NeuronCC 2.23, bf16, d=128. Agent: Claude Opus 4.6 via [AWS Bedrock](https://aws.amazon.com/bedrock/). Orchestration: [Strands Agents SDK](https://github.com/strands-agents/sdk-python). FlashAttention-4 numbers from [Shah et al. (arXiv 2603.05451)](https://arxiv.org/abs/2603.05451). NKI kernel implementations from [aws-neuron/nki-samples](https://github.com/aws-neuron/nki-samples). Code and data: [research-papers](https://github.com/JunjieTang-D1/research-papers)._
 
-*Patent pending. The system architecture and optimization methodology underlying the agent-driven kernel generation described in this post are subject to intellectual property protection.*
+_Patent pending. The system architecture and optimization methodology underlying the agent-driven kernel generation described in this post are subject to intellectual property protection._

@@ -10,19 +10,19 @@ toc:
 
 > **Disclaimer:** The views and opinions expressed in this post are my own and do not represent those of my employer.
 
-
-Most multi-agent coding demos are indistinguishable from each other. A team of LLMs builds something. Screenshots get posted. Nobody tries to deploy it, and if they did, it wouldn't run. The field doesn't lack demos. It lacks *operating rules* — the load-bearing decisions that separate teams that produce deployable software from teams that produce interesting-looking artifacts.
+Most multi-agent coding demos are indistinguishable from each other. A team of LLMs builds something. Screenshots get posted. Nobody tries to deploy it, and if they did, it wouldn't run. The field doesn't lack demos. It lacks _operating rules_ — the load-bearing decisions that separate teams that produce deployable software from teams that produce interesting-looking artifacts.
 
 This post presents five such rules, derived from 27 controlled experiments across two domains and two model generations. A one-page summary of the rules lives at [AGENTS.md](https://github.com/JunjieTang-D1/agents-md/blob/main/AGENTS.md). This post gives the reasoning, the evidence, and the limitations behind them.
 
 > **The five rules:**
+>
 > 1. Default to 3–5 agents.
 > 2. One shared project directory with per-agent write scopes.
 > 3. Nightly integration tests. Inject failures into tomorrow's prompt.
 > 4. One dedicated DevOps agent owns the deployment artifacts.
 > 5. N≥2 runs per configuration, or you're reporting noise.
 
-If you only read this far: start there. The rest of the post answers *why* each rule is load-bearing and *what happened when I violated it*.
+If you only read this far: start there. The rest of the post answers _why_ each rule is load-bearing and _what happened when I violated it_.
 
 ## What the data looks like
 
@@ -40,15 +40,15 @@ I built AgentCorp, a framework that runs N LLM agents through a simulated 10-day
 
 **What I found.** Across 18 controlled baseline runs (3 complexities × 2 team sizes × 3 repeats, LLM-judged artifact quality), 5-agent teams outperformed 10-agent teams on every complexity level and every repeat. The verified average across 1-week and 2-week sprints:
 
-| Sprint | 5-agent (N=3) | 10-agent (N=3) | Δ |
-|---|:-:|:-:|:-:|
-| 1-week (todo app) | 7.82 | 6.50 | +20.3% |
-| 2-week (knowledge base) | 7.38 | 6.79 | +8.7% |
-| **Weighted avg** | **7.60** | **6.64** | **+14.4%** |
+| Sprint                  | 5-agent (N=3) | 10-agent (N=3) |     Δ      |
+| ----------------------- | :-----------: | :------------: | :--------: |
+| 1-week (todo app)       |     7.82      |      6.50      |   +20.3%   |
+| 2-week (knowledge base) |     7.38      |      6.79      |   +8.7%    |
+| **Weighted avg**        |   **7.60**    |    **6.64**    | **+14.4%** |
 
 4-week (project-management SaaS) runs completed but were under-evaluated; direction held, precise magnitude pending rerun.
 
-**Caveat on the measurement.** These are LLM-judged process scores — artifact clarity, structure, documentation — scored by Claude Sonnet 4.6 at temperature 0.0. The low variance across reruns (pillar SD = 0.05) reflects both output stability and judge determinism at temp-0; the two are entangled in this setup. The scores are a *directional* signal, not a definitive one. The stronger evidence is Rule 4's result below, where 5-agent teams produce complete deployment stacks and 10-agent teams were the configurations that burned the most tokens fighting themselves.
+**Caveat on the measurement.** These are LLM-judged process scores — artifact clarity, structure, documentation — scored by Claude Sonnet 4.6 at temperature 0.0. The low variance across reruns (pillar SD = 0.05) reflects both output stability and judge determinism at temp-0; the two are entangled in this setup. The scores are a _directional_ signal, not a definitive one. The stronger evidence is Rule 4's result below, where 5-agent teams produce complete deployment stacks and 10-agent teams were the configurations that burned the most tokens fighting themselves.
 
 **The mechanism.** A single agent holds the full project in its context window. Every split compresses that understanding. I call this the **Context Consolidation Paradox**: splitting a project across N agents strictly decreases information coherence, and you only recover it through coordination machinery that itself costs signal. This is [Amdahl's Law applied to agent teams](https://arxiv.org/abs/2603.12229) — when serial work (architecture, integration, review) dominates, adding agents adds overhead without proportional gain.
 
@@ -59,7 +59,7 @@ I built AgentCorp, a framework that runs N LLM agents through a simulated 10-day
 - **Self-contained prompts** — every worker prompt carries full context
 - **Skeptical memory** — agents verify memory against code before acting
 
-Every pattern reduced the mean quality score. All four reduced variance by ~79%, so they made 10-agent teams *more consistent* — consistently worse than 5-agent teams. Adding coordination machinery to a team that's already fighting context-window limits compounds the problem.
+Every pattern reduced the mean quality score. All four reduced variance by ~79%, so they made 10-agent teams _more consistent_ — consistently worse than 5-agent teams. Adding coordination machinery to a team that's already fighting context-window limits compounds the problem.
 
 **Rule:** start at 3 agents. Move to 5 when specialization obviously helps. Don't go higher unless your measurements demand it.
 
@@ -71,7 +71,7 @@ Every pattern reduced the mean quality score. All four reduced variance by ~79%,
 
 Every configuration that used a shared `project/` directory with path-scoped writes produced 18K–35K LOC of working software.
 
-**The mechanism.** Agents write to where they think code belongs. Without a shared physical tree, they can't see each other's work even if they read each other's outputs. A file exists in one place; the rest is citation. Shared directory turns citation into dependency — agents read and import *each other's code* as they build. Per-agent scoping prevents them from overwriting each other while doing it.
+**The mechanism.** Agents write to where they think code belongs. Without a shared physical tree, they can't see each other's work even if they read each other's outputs. A file exists in one place; the rest is citation. Shared directory turns citation into dependency — agents read and import _each other's code_ as they build. Per-agent scoping prevents them from overwriting each other while doing it.
 
 **Concrete:** one `src/` tree. Billing agent writes only to `src/billing/`. Auth agent writes only to `src/auth/`. Shared contracts live in `src/common/` owned by the planner. `git log --name-only` should show each file touched by exactly one agent.
 
@@ -91,7 +91,7 @@ The minimum nightly suite that worked:
 - Dockerfile check — valid structure, entry point exists
 - Hardcoded-values check — no account IDs, no pinned regions
 
-Day N+1's prompt begins with: *"These tests failed yesterday. Fix them first before writing new code."*
+Day N+1's prompt begins with: _"These tests failed yesterday. Fix them first before writing new code."_
 
 **Verify the harness itself.** In two of my N=3 runs, a path bug silently made pytest collect zero items for the entire 10-day sprint. The agents received no real test feedback for ten simulated days and still produced 92% and 95% pass rates — which is impressive and also a harness bug that masked the problem for weeks. If your feedback loop can fail quietly, assume it will. Add a liveness check.
 
@@ -125,7 +125,7 @@ No other agent touches these. DevOps reads the project structure each day and bu
 
 For the 5-agent configuration at N=3, pass rates landed at 92%, 99%, 95%. Consistent, but the spread is still 7 percentage points on identical inputs.
 
-**Rule:** run every configuration at least twice. Pre-register what "success" means before you see results. Report mean and variance. If runs disagree materially, that *is* the finding.
+**Rule:** run every configuration at least twice. Pre-register what "success" means before you see results. Report mean and variance. If runs disagree materially, that _is_ the finding.
 
 ## Does the software actually work? (The circular-metric problem)
 
@@ -147,7 +147,7 @@ I can't fully escape this with the current harness. I can measure things externa
 - Functional coverage — what behavior the tests actually exercise — is unmeasured.
 - Whether the CDK stack would deploy cleanly to a real account (it synthesizes; I haven't paid to deploy it).
 
-**The honest version:** the 92–99% pass rates show the agents' output is *self-consistent at high density*. They're not proof of correctness. The deployment artifacts, the import graph, and the CDK synthesis *are* external checks — they fail or pass for reasons outside the agents' control. Those are the numbers to trust most.
+**The honest version:** the 92–99% pass rates show the agents' output is _self-consistent at high density_. They're not proof of correctness. The deployment artifacts, the import graph, and the CDK synthesis _are_ external checks — they fail or pass for reasons outside the agents' control. Those are the numbers to trust most.
 
 The next work item is adding a held-out test suite I write (not the agents) for a subset of domain modules, plus functional coverage analysis. That closes the gap between "tests pass" and "the system works." I'll publish that as a follow-up when the data exists.
 
@@ -155,16 +155,16 @@ The next work item is adding a held-out test suite I write (not the agents) for 
 
 Supporting evidence for the rules above. Three identical runs of the 5-agent configuration on the Physical AI sprint:
 
-| Metric | Run 1 | Run 2 | Run 3 | Mean ± SD |
-|---|:-:|:-:|:-:|:-:|
-| Days completed | 10/10 | 10/10 | 10/10 | — |
-| Stories / points | 14/14, 43/43 | 14/14, 43/43 | 14/14, 43/43 | — |
-| Python files in `project/` | 67 | 84 | 88 | 80 ± 11 |
-| Lines of code | 28,516 | 30,381 | 35,073 | 31,323 ± 3,399 |
-| 5-pillar avg | 6.88 | 6.94 | 6.97 | 6.93 ± 0.05 |
-| pytest pass rate | 92.0% | 99.1% | 95.3% | — |
-| Deployment artifacts present | all | all | all | — |
-| `docker build` succeeds | yes | yes | yes | — |
+| Metric                       |    Run 1     |    Run 2     |    Run 3     |   Mean ± SD    |
+| ---------------------------- | :----------: | :----------: | :----------: | :------------: |
+| Days completed               |    10/10     |    10/10     |    10/10     |       —        |
+| Stories / points             | 14/14, 43/43 | 14/14, 43/43 | 14/14, 43/43 |       —        |
+| Python files in `project/`   |      67      |      84      |      88      |    80 ± 11     |
+| Lines of code                |    28,516    |    30,381    |    35,073    | 31,323 ± 3,399 |
+| 5-pillar avg                 |     6.88     |     6.94     |     6.97     |  6.93 ± 0.05   |
+| pytest pass rate             |    92.0%     |    99.1%     |    95.3%     |       —        |
+| Deployment artifacts present |     all      |     all      |     all      |       —        |
+| `docker build` succeeds      |     yes      |     yes      |     yes      |       —        |
 
 All three completed under three hours on a single arm64 EC2 instance (61 GB, 8 vCPU). Pillar score SD = 0.05 — partly output stability, partly the temp-0 judge returning similar scores on similar artifacts; I can't fully disentangle these in the current harness. For calibration, the 6.93 mean sits in the upper-middle of the score range this framework produces; the best observed single-run score across the full experiment set was 7.27. The 5-pillar average is capped implicitly by the Outcome pillar, which is limited by how much of the work is verifiable — the next section explains why.
 
@@ -178,19 +178,19 @@ These are identical-input reruns — they establish bounded LLM sampling varianc
 
 The rubric that exposed the issue. An earlier configuration scored **9.3/10 on process metrics** — clean code, strong docs, excellent coordination. Then I checked the tests: **44% pass rate.** Beautiful, disconnected code.
 
-That forced a rethink. A single overall score hides too much. I needed a framework that separates *how well the agents follow instructions* from *whether the output actually works*. The 5-pillar framework I built after that:
+That forced a rethink. A single overall score hides too much. I needed a framework that separates _how well the agents follow instructions_ from _whether the output actually works_. The 5-pillar framework I built after that:
 
-| Pillar | What it measures | Why it matters |
-|---|---|---|
-| **LLM Quality** | Instruction-following, code structure, documentation quality, safety compliance | Catches agents that write plausible but wrong code — hallucinated APIs, ignored constraints, unsafe patterns |
-| **Memory** | Cross-day context retention, decision consistency, scratchpad usage | A 10-day sprint is useless if agents forget day 3's architecture decisions by day 7. This pillar catches context drift |
-| **Tools** | Tool call success rate, appropriate tool selection, error recovery | Agents that call the wrong tool or fail silently waste entire sprint days. Measures whether the agent-tool interface is reliable |
-| **Environment** | AWS service naming accuracy, IAM policy correctness, resource configuration, guardrails | The difference between `sagemaker:CreateEndpoint` and a hallucinated API. Wrong service names mean nothing deploys |
-| **Outcome** | Test pass rate, deployment readiness (Docker builds, entry point works), story completion, integration test results | The only pillar that answers: *does it run?* Everything else is process. This is the product |
+| Pillar          | What it measures                                                                                                    | Why it matters                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **LLM Quality** | Instruction-following, code structure, documentation quality, safety compliance                                     | Catches agents that write plausible but wrong code — hallucinated APIs, ignored constraints, unsafe patterns                     |
+| **Memory**      | Cross-day context retention, decision consistency, scratchpad usage                                                 | A 10-day sprint is useless if agents forget day 3's architecture decisions by day 7. This pillar catches context drift           |
+| **Tools**       | Tool call success rate, appropriate tool selection, error recovery                                                  | Agents that call the wrong tool or fail silently waste entire sprint days. Measures whether the agent-tool interface is reliable |
+| **Environment** | AWS service naming accuracy, IAM policy correctness, resource configuration, guardrails                             | The difference between `sagemaker:CreateEndpoint` and a hallucinated API. Wrong service names mean nothing deploys               |
+| **Outcome**     | Test pass rate, deployment readiness (Docker builds, entry point works), story completion, integration test results | The only pillar that answers: _does it run?_ Everything else is process. This is the product                                     |
 
-**How scoring works.** Claude Sonnet 4.6 at temperature 0.0 evaluates each pillar on a 1–10 scale against the project specification and sprint artifacts. The low variance across reruns (SD = 0.05) reflects both genuine output stability and judge determinism at temp-0 — the two are entangled in this setup. The scores are a *directional* signal, not ground truth.
+**How scoring works.** Claude Sonnet 4.6 at temperature 0.0 evaluates each pillar on a 1–10 scale against the project specification and sprint artifacts. The low variance across reruns (SD = 0.05) reflects both genuine output stability and judge determinism at temp-0 — the two are entangled in this setup. The scores are a _directional_ signal, not ground truth.
 
-**The key insight:** the first four pillars can all score 9+ while Outcome scores 4. That's exactly what happened in early runs. The Outcome pillar is the only one that separates *"passes a review"* from *"runs in production"*. Any agent evaluation without an Outcome pillar is measuring politeness, not capability.
+**The key insight:** the first four pillars can all score 9+ while Outcome scores 4. That's exactly what happened in early runs. The Outcome pillar is the only one that separates _"passes a review"_ from _"runs in production"_. Any agent evaluation without an Outcome pillar is measuring politeness, not capability.
 
 ## What to do with this
 
@@ -205,18 +205,18 @@ The one-page rules summary is open-source at **[github.com/JunjieTang-D1/agents-
 
 ---
 
-*AgentCorp uses [Amazon Bedrock](https://aws.amazon.com/bedrock/) (Claude Opus 4.6 for planner and judge, Claude Sonnet 4.6 for workers), [Strands Agents SDK](https://github.com/strands-agents/sdk-python), and [OpenTelemetry](https://opentelemetry.io/) for observability. All experiments ran on a single arm64 EC2 instance (61 GB RAM, 8 vCPU).*
+_AgentCorp uses [Amazon Bedrock](https://aws.amazon.com/bedrock/) (Claude Opus 4.6 for planner and judge, Claude Sonnet 4.6 for workers), [Strands Agents SDK](https://github.com/strands-agents/sdk-python), and [OpenTelemetry](https://opentelemetry.io/) for observability. All experiments ran on a single arm64 EC2 instance (61 GB RAM, 8 vCPU)._
 
 ## References
 
-1. Jinxin, L., et al. (2026). *Multi-Agent Teams Hold Experts Back: Integrative Compromise in LLM Collaboration.* arXiv:2602.01011. [https://arxiv.org/abs/2602.01011](https://arxiv.org/abs/2602.01011)
-2. Zhang, Y., Liu, T., Chen, X., Wang, H., & Kumar, S. (2026). *Amdahl's Law for Agent Teams: Characterizing Parallelization Limits in Multi-Agent Systems.* arXiv:2603.12229. Princeton · MIT · Cambridge · NYU. [https://arxiv.org/abs/2603.12229](https://arxiv.org/abs/2603.12229)
-3. Benkovich, et al. (2026). *Agyn: Team-Based Autonomous Software Engineering.* arXiv:2602.01465. [https://arxiv.org/abs/2602.01465](https://arxiv.org/abs/2602.01465)
-4. Zechner, et al. (2026). *TheBotCompany: Self-Organizing Multi-Agent Systems for Continuous Software Development.* arXiv:2603.25928. [https://arxiv.org/abs/2603.25928](https://arxiv.org/abs/2603.25928)
-5. Qian, C., et al. (2024). *ChatDev: Communicative Agents for Software Development.* ACL 2024. arXiv:2307.07924.
-6. Hong, S., et al. (2024). *MetaGPT: Meta Programming for a Multi-Agent Collaborative Framework.* ICLR 2024. arXiv:2308.00352.
-7. Jiménez, C. E., et al. (2023). *SWE-bench.* arXiv:2310.06770.
-8. Amdahl, G. M. (1967). *Validity of the single processor approach to achieving large scale computing capabilities.* AFIPS SJCC.
-9. Brooks, F. P. (1975). *The Mythical Man-Month.* Addison-Wesley.
-10. Rajasekaran, P. (2026). *Harness Design for Long-Running Application Development.* Anthropic Engineering. [https://www.anthropic.com/engineering/harness-design-long-running-apps](https://www.anthropic.com/engineering/harness-design-long-running-apps)
+1. Jinxin, L., et al. (2026). _Multi-Agent Teams Hold Experts Back: Integrative Compromise in LLM Collaboration._ arXiv:2602.01011. [https://arxiv.org/abs/2602.01011](https://arxiv.org/abs/2602.01011)
+2. Zhang, Y., Liu, T., Chen, X., Wang, H., & Kumar, S. (2026). _Amdahl's Law for Agent Teams: Characterizing Parallelization Limits in Multi-Agent Systems._ arXiv:2603.12229. Princeton · MIT · Cambridge · NYU. [https://arxiv.org/abs/2603.12229](https://arxiv.org/abs/2603.12229)
+3. Benkovich, et al. (2026). _Agyn: Team-Based Autonomous Software Engineering._ arXiv:2602.01465. [https://arxiv.org/abs/2602.01465](https://arxiv.org/abs/2602.01465)
+4. Zechner, et al. (2026). _TheBotCompany: Self-Organizing Multi-Agent Systems for Continuous Software Development._ arXiv:2603.25928. [https://arxiv.org/abs/2603.25928](https://arxiv.org/abs/2603.25928)
+5. Qian, C., et al. (2024). _ChatDev: Communicative Agents for Software Development._ ACL 2024. arXiv:2307.07924.
+6. Hong, S., et al. (2024). _MetaGPT: Meta Programming for a Multi-Agent Collaborative Framework._ ICLR 2024. arXiv:2308.00352.
+7. Jiménez, C. E., et al. (2023). _SWE-bench._ arXiv:2310.06770.
+8. Amdahl, G. M. (1967). _Validity of the single processor approach to achieving large scale computing capabilities._ AFIPS SJCC.
+9. Brooks, F. P. (1975). _The Mythical Man-Month._ Addison-Wesley.
+10. Rajasekaran, P. (2026). _Harness Design for Long-Running Application Development._ Anthropic Engineering. [https://www.anthropic.com/engineering/harness-design-long-running-apps](https://www.anthropic.com/engineering/harness-design-long-running-apps)
 11. AgentCorp source code and experimental data — releasing publicly soon.
