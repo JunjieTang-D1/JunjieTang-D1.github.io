@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: Sr. Principal @ <a href='https://aws.amazon.com/'>AWS</a> • Autonomous Driving • Generative AI • AI Accelerators
+subtitle: Sr. Principal @ <a href='https://aws.amazon.com/'>AWS</a> • Agentic AI • Reinforcement Learning • AI Accelerators
 
 profile:
   align: right
@@ -21,6 +21,6 @@ I created the [Autonomous Driving Data Framework (ADDF)](https://github.com/aws-
 
 I have spoken at [AWS re:Invent](https://reinvent.awsevents.com/) every year since 2017 and at the United Nations on AI for Road Safety, and I am an invited speaker at the [KDD 2026 Day on AI Reasoning](https://ai-reasoning-kdd26.github.io/) on harness-guided reasoning for coding agents. My research has been published at [ICML 2026](https://arxiv.org/abs/2607.04395) and [AAAI 2026](https://openreview.net/forum?id=wR4BCDoIGM), alongside 20+ technical articles on AWS architecture, autonomous driving, and generative AI. I hold [all active AWS certifications](https://www.credly.com/users/junjie-tang.0c4593de/badges) and received the AWS Technical Field Community Collaboration Award (2021).
 
-I regularly share my work on [LinkedIn](https://www.linkedin.com/in/junjie-tang/), [Medium](https://medium.com/@junjie-tang), and in [blog](/blog/) posts covering topics from LLM inference and autonomous driving to cloud data architectures.
+I regularly share my work on [LinkedIn](https://www.linkedin.com/in/junjie-tang/) and in [blog](/blog/) posts covering topics from LLM inference and autonomous driving to cloud data architectures.
 
 Previously, I studied at the University of Cologne. I am fluent in English, German, and Chinese.
